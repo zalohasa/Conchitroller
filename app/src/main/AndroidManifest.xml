@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.z.belenconchasv1"
+    package="com.z.conchitroller"
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-sdk tools:overrideLibrary="com.macroyau.blue2serial"/>
 
     <application
-        android:name="com.z.belenconchasv1.Conchitroller"
+        android:name="com.z.conchitroller.Conchitroller"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".MainActivity"
+            android:name="com.z.conchitroller.MainActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
@@ -23,7 +23,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ColorPicker"
+            android:name="com.z.conchitroller.ColorPicker"
             android:label="@string/title_activity_color_picker"
             android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
