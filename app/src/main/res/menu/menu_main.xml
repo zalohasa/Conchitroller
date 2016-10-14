@@ -1,0 +1,69 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.z.belenconchasv1.MainActivity">
+    <item
+        android:id="@+id/action_connect"
+        android:orderInCategory="100"
+        android:title="@string/action_connect"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_disconnect"
+        android:orderInCategory="200"
+        android:title="Desconectar"
+        app:showAsAction="never"
+        />
+    <item
+        android:id="@+id/submenu_belen"
+        android:orderInCategory="300"
+        android:title="Belén"
+        >
+        <menu>
+            <item
+                android:id="@+id/action_belen_save"
+                android:orderInCategory="100"
+                android:title="Guardar"
+                />
+            <item
+                android:id="@+id/action_belen_reset"
+                android:orderInCategory="200"
+                android:title="Reset"
+                />
+            <item
+                android:id="@+id/action_set_fps"
+                android:orderInCategory="300"
+                android:title="Velocidad"
+                />
+            <item
+                android:id="@+id/action_refresh"
+                android:orderInCategory="400"
+                android:title="Refrescar colores"
+                />
+        </menu>
+    </item>
+
+    <item
+        android:id="@+id/submenu_guardados"
+        android:title="Guardados"
+        android:orderInCategory="400"
+        >
+        <menu>
+            <item
+                android:id="@+id/action_save"
+                android:orderInCategory="350"
+                android:title="Guardar" />
+            <item android:id="@+id/action_load"
+                android:orderInCategory="360"
+                android:title="Cargar" />
+            <item android:id="@+id/action_delete"
+                android:orderInCategory="370"
+                android:title="Borrar" />
+        </menu>
+
+    </item>
+    <item
+        android:id="@+id/action_reset_names"
+        android:orderInCategory="500"
+        android:title="Resetear Nombres"
+        />
+</menu>

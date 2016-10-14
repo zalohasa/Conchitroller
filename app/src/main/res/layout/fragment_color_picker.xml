@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    android:orientation="vertical"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <com.flask.colorpicker.ColorPickerView
+        android:id="@+id/color_picker_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:alphaSlider="false"
+        app:density="12"
+        app:wheelType="CIRCLE"
+        />
+
+    <com.flask.colorpicker.slider.LightnessSlider
+        android:id="@+id/v_lightness_slider"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        />
+
+    <CheckBox
+        android:text="Modo Fuego"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="fireModeClicked"
+        android:id="@+id/fire_mode_check" />
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="textPersonName"
+        android:text="Name"
+        android:ems="10"
+        android:id="@+id/led_name_edit" />
+</LinearLayout>
