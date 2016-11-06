@@ -8,6 +8,14 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="textPersonName"
+        android:text="Name"
+        android:ems="10"
+        android:id="@+id/led_name_edit" />
+
     <com.flask.colorpicker.ColorPickerView
         android:id="@+id/color_picker_view"
         android:layout_width="match_parent"
@@ -15,6 +23,7 @@
         app:alphaSlider="false"
         app:density="12"
         app:wheelType="CIRCLE"
+
         />
 
     <com.flask.colorpicker.slider.LightnessSlider
@@ -30,12 +39,6 @@
         android:onClick="fireModeClicked"
         android:id="@+id/fire_mode_check" />
 
-    <EditText
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:inputType="textPersonName"
-        android:text="Name"
-        android:ems="10"
-        android:id="@+id/led_name_edit" />
+
 </LinearLayout>
 </ScrollView>

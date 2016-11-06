@@ -13,6 +13,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.CheckBox;
 import android.widget.EditText;
 
@@ -36,6 +37,7 @@ public class ColorPicker extends AppCompatActivity {
 
         Conchitroller appState = (Conchitroller)getApplicationContext();
         final LedContainer selectedLed = appState.getSelectedLed();
+        setTitle(selectedLed.getNumber() + " - " + selectedLed.getName());
 
         LightnessSlider lightnessSlider = (LightnessSlider) findViewById(R.id.v_lightness_slider);
 
@@ -98,6 +100,8 @@ public class ColorPicker extends AppCompatActivity {
         super.onStart();
         Intent intent = new Intent(this, BelenService.class);
         bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
     }
 
     @Override
