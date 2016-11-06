@@ -1,8 +1,12 @@
 package com.z.conchitroller;
 
 import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
@@ -18,6 +22,8 @@ import com.flask.colorpicker.slider.LightnessSlider;
 import com.flask.colorpicker.slider.OnValueChangedListener;
 
 public class ColorPicker extends AppCompatActivity {
+
+    BelenService belen;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,7 +47,7 @@ public class ColorPicker extends AppCompatActivity {
         lightnessSlider.setOnValueChangedListener(new OnValueChangedListener() {
             @Override
             public void onValueChanged(float v) {
-                setNewLedColor(colorPicker.getSelectedColor(), selectedLed);
+                belen.setNewLedColor(colorPicker.getSelectedColor(), selectedLed);
                 Log.d("SLIDER", "ValueChanged: " + v);
             }
         });
@@ -59,7 +65,7 @@ public class ColorPicker extends AppCompatActivity {
         colorPicker.addOnColorSelectedListener(new OnColorSelectedListener() {
             @Override
             public void onColorSelected(int selectedColor) {
-                setNewLedColor(selectedColor, selectedLed);
+                belen.setNewLedColor(selectedColor, selectedLed);
             }
         });
 
@@ -84,17 +90,21 @@ public class ColorPicker extends AppCompatActivity {
 
         setResult(Activity.RESULT_OK);
 
+    }
 
+    @Override
+    protected void onStart()
+    {
+        super.onStart();
+        Intent intent = new Intent(this, BelenService.class);
+        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+    }
 
-
-//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-//        fab.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
-//            }
-//        });
+    @Override
+    protected void onStop()
+    {
+        super.onStop();
+        unbindService(mConnection);
     }
 
     public void fireModeClicked(View view)
@@ -105,29 +115,29 @@ public class ColorPicker extends AppCompatActivity {
         if (check.isChecked())
         {
             Log.d("FIREMODE","Fire mode on");
-            setFireMode(true, selectedLed);
+            belen.setFireMode(true, selectedLed);
         }else{
             Log.d("FIREMODE","Fire mode off");
-            setFireMode(false, selectedLed);
+            belen.setFireMode(false, selectedLed);
         }
     }
 
-    private void setNewLedColor(int color, LedContainer led)
-    {
-        Conchitroller appState = (Conchitroller)getApplicationContext();
-        led.setColor(color);
-        Log.d("COMMAND","Sending: " + "s" + led.toColorCommandString());
-        appState.bt_.write("s" + led.toColorCommandString(), true);
-        //ledListAdapter.notifyDataSetChanged();
-    }
+    /** Defines callbacks for service binding, passed to bindService() */
+    private ServiceConnection mConnection = new ServiceConnection() {
 
-    private void setFireMode(boolean enable, LedContainer led)
-    {
-        Conchitroller appState = (Conchitroller)getApplicationContext();
-        led.setFlick(enable);
-        Log.d("COMMAND","Sending: " + "f" + led.toFlickCommandString());
-        appState.bt_.write("f" + led.toFlickCommandString(), true);
-        //ledListAdapter.notifyDataSetChanged();
-    }
+        @Override
+        public void onServiceConnected(ComponentName className,
+                                       IBinder service) {
+            // We've bound to LocalService, cast the IBinder and get LocalService instance
+            Log.d("SERVICE","Service binded");
+            BelenService.LocalBinder binder = (BelenService.LocalBinder) service;
+            belen = binder.getService();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+
+        }
+    };
 
 }

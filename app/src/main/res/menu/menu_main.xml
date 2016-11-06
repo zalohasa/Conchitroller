@@ -22,7 +22,7 @@
             <item
                 android:id="@+id/action_belen_save"
                 android:orderInCategory="100"
-                android:title="Guardar"
+                android:title="Guardar actual"
                 />
             <item
                 android:id="@+id/action_belen_reset"
@@ -37,14 +37,14 @@
             <item
                 android:id="@+id/action_refresh"
                 android:orderInCategory="400"
-                android:title="Refrescar colores"
+                android:title="Recargar colores"
                 />
         </menu>
     </item>
 
     <item
         android:id="@+id/submenu_guardados"
-        android:title="Guardados"
+        android:title="Configuraciones"
         android:orderInCategory="400"
         >
         <menu>

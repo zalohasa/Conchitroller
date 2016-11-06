@@ -10,7 +10,6 @@ import com.macroyau.blue2serial.BluetoothSerial;
 
 public class Conchitroller extends Application {
     private LedContainer selectedLed_;
-    public BluetoothSerial bt_;
 
     public LedContainer getSelectedLed() {
         return selectedLed_;
