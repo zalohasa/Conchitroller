@@ -35,6 +35,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.PrintStream;
+import java.math.BigInteger;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +47,7 @@ public class MainActivity extends AppCompatActivity
     public final static String LED_DATA = "com.z.belenconchasv1.LED_DATA";
     private static final int REQUEST_ENABLE_BLUETOOTH = 1;
     private static final int REQUEST_MODIFY_LED = 2;
+    private static final int RETRIES_MAX_COUNT = 8;
 
     private BluetoothSerial bt;
     private int numberOfLeds;
@@ -60,6 +62,7 @@ public class MainActivity extends AppCompatActivity
     private enum Status {STARTED}
     private CommandStatus currentCommandStatus;
     private Command currentCommand;
+    private QueuedCommand outgoingCommand;
     private Queue<QueuedCommand> pendingCommands = new ArrayDeque<QueuedCommand>();
     private StringBuilder partialResponse = new StringBuilder();
     private List<LedContainer> leds = new ArrayList<LedContainer>();
@@ -688,6 +691,18 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    /**
+     * Special version of the sendOkTypeCommand used to retry an already launched command.
+     * @param command
+     */
+    private void sendOkTypeCommand(QueuedCommand command)
+    {
+        currentCommandStatus = CommandStatus.WAITING_FOR_RESPONSE;
+        currentCommand = Command.OK_COMMAND;
+        Log.d("COMMAND","Sent retryed command: " + command.textCommand);
+        bt.write(command.textCommand, true);
+    }
+
     private void sendOkTypeCommand(String command)
     {
         if (currentCommandStatus == CommandStatus.IDLE)
@@ -696,6 +711,7 @@ public class MainActivity extends AppCompatActivity
             currentCommand = Command.OK_COMMAND;
             Log.d("COMMAND","Sent command: " + command);
             bt.write(command, true);
+            outgoingCommand = new QueuedCommand(Command.OK_COMMAND, command);
         }
         else
         {
@@ -705,6 +721,7 @@ public class MainActivity extends AppCompatActivity
 
     private void parseCurrentDelay(String response)
     {
+        Log.d("COMMANDS", "Current delay response: " + String.format("%040x", new BigInteger(1, response.getBytes())));
         try
         {
             currentDelay = Integer.parseInt(response);
@@ -734,6 +751,7 @@ public class MainActivity extends AppCompatActivity
 
     private void parseCurrentConfigResponse(String response)
     {
+        Log.d("COMMANDS", "Current config response: " + response);
         leds.clear();
         try {
             SharedPreferences prefs = getPreferences(Context.MODE_PRIVATE);
@@ -768,12 +786,32 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void commandFinished()
+    private void commandFinished(boolean withError)
     {
+        QueuedCommand c;
         currentCommand = Command.IDLE;
         currentCommandStatus = CommandStatus.IDLE;
         partialResponse.setLength(0);
-        QueuedCommand c = pendingCommands.poll();
+        if (withError) {
+            c = outgoingCommand;
+            if (c != null) {
+                c.retries++;
+                Log.w("COMMAND","Retrying command " + c.textCommand);
+                Log.w("COMMAND", "Retry number: " + c.retries);
+                if (c.retries == RETRIES_MAX_COUNT)
+                {
+                    Log.e("COMMAND","Maximum number of retries reached for: " + c.textCommand);
+                    Log.e("COMMAND", "Skipping command");
+                    c = pendingCommands.poll();
+                    outgoingCommand = null;
+                }
+            }
+        }
+        else
+        {
+            outgoingCommand = null;
+            c = pendingCommands.poll();
+        }
         if (c != null)
         {
             Log.d("COMMAND", "Pending command found, processing...");
@@ -786,7 +824,13 @@ public class MainActivity extends AppCompatActivity
                     checkCurrentDelay();
                     break;
                 case OK_COMMAND:
-                    sendOkTypeCommand(c.textCommand);
+                    if (outgoingCommand != null)
+                    {
+                        sendOkTypeCommand(outgoingCommand);
+                    } else
+                    {
+                        sendOkTypeCommand(c.textCommand);
+                    }
                     break;
             }
         }
@@ -852,6 +896,12 @@ public class MainActivity extends AppCompatActivity
             boolean full = false;
             for (int i = 0; i < bytes.length; ++i)
             {
+                if (bytes[i] == 0x0a)
+                {
+                    //Sometimes there are 0x0a line feeds in the respose. I'm trying to discover why.
+                    Log.w("COMMAND","Line feed character eliminated.");
+                    continue;
+                }
                 if (bytes[i] == 0x0D)
                 {
                     //End of line char, end of command.
@@ -861,6 +911,7 @@ public class MainActivity extends AppCompatActivity
                 partialResponse.append((char)bytes[i]);
             }
             if (full){
+                boolean withError = false;
                 String fullResponse = partialResponse.toString();
                 if (currentCommand == Command.NUMBER_OF_LEDS) {
                     parseNumberOfLedsResponse(fullResponse);
@@ -876,14 +927,16 @@ public class MainActivity extends AppCompatActivity
                 {
                     if (fullResponse.equalsIgnoreCase("OK"))
                     {
+                        withError = false;
                         Log.d("COMMAND", "Command OK");
                     }
                     else
                     {
-                        Log.d("COMMAND", "Command error");
+                        withError = true;
+                        Log.d("COMMAND", "Command error: " + fullResponse);
                     }
                 }
-                commandFinished();
+                commandFinished(withError);
             }
         }
         else
@@ -970,16 +1023,19 @@ public class MainActivity extends AppCompatActivity
     {
         public Command command;
         public String textCommand;
+        public int retries;
 
         public QueuedCommand(Command c)
         {
             command = c;
+            retries = 0;
         }
 
         public QueuedCommand(Command c, String txt)
         {
             command = c;
             textCommand = txt;
+            retries = 0;
         }
     }
 }
