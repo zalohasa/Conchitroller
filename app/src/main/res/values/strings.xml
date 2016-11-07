@@ -3,4 +3,13 @@
     <string name="action_settings">Settings</string>
     <string name="action_connect">Conectar</string>
     <string name="title_activity_color_picker">ColorPicker</string>
+    <string name="context_copy">Copiar</string>
+    <string name="context_paste">Pegar</string>
+    <string name="context_off">Off</string>
+    <string name="context_white">Blanco Max.</string>
+    <string name="context_fire">Fuego</string>
+    <string name="context_presets">Predefinidos</string>
+    <string name="context_red">Rojo</string>
+    <string name="context_blue">Azul</string>
+    <string name="context_green">Verde</string>
 </resources>

@@ -10,6 +10,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
@@ -17,7 +18,9 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -42,8 +45,9 @@ public class MainActivity extends AppCompatActivity
     private static final int REQUEST_ENABLE_BLUETOOTH = 1;
     private static final int REQUEST_MODIFY_LED = 2;
 
-    private MenuItem submenuBelen;
-    private MenuItem submenuGuardados;
+    LedContainer ledToCopy;
+
+    private Menu optionsMenu;
     private BelenService belen;
     private BroadcastReceiver broadcastReceiver;
 
@@ -59,10 +63,12 @@ public class MainActivity extends AppCompatActivity
         setSupportActionBar(toolbar);
         TextView txt = (TextView) findViewById(R.id.textView);
         txt.setText("Conectate al belen usando el menú");
+        ledToCopy = null;
 
         ListView ledList = (ListView) findViewById(R.id.listView);
         ledListAdapter = new LedsAdapter(this, R.layout.row, R.id.led_name);
         ledList.setAdapter(ledListAdapter);
+        registerForContextMenu(ledList);
         ledList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
            @Override
            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l)
@@ -108,7 +114,7 @@ public class MainActivity extends AppCompatActivity
                     case BelenService.ACTION_SHOW_TOAST:
                         String str = intent.getStringExtra(BelenService.EXTRA_TOAST_STRING);
                         Log.d("MESSAGE", "Show toast: " + str);
-                        Toast.makeText(MainActivity.this, str, Toast.LENGTH_LONG).show();
+                        Toast.makeText(MainActivity.this, str, Toast.LENGTH_SHORT).show();
                         break;
                 }
             }
@@ -177,15 +183,24 @@ public class MainActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
-        submenuBelen = menu.findItem(R.id.submenu_belen);
-        submenuGuardados = menu.findItem(R.id.submenu_guardados);
+        optionsMenu = menu;
+
+        MenuItem submenuBelen = menu.findItem(R.id.submenu_belen);
+        MenuItem submenuGuardados = menu.findItem(R.id.submenu_guardados);
+        MenuItem connect = menu.findItem(R.id.action_connect);
+        MenuItem disconnect = menu.findItem(R.id.action_disconnect);
+
         if (belen != null && belen.isConnected())
         {
+            connect.setEnabled(false);
+            disconnect.setEnabled(true);
             submenuBelen.setEnabled(true);
             submenuGuardados.setEnabled(true);
         }
         else
         {
+            connect.setEnabled(true);
+            disconnect.setEnabled(false);
             submenuBelen.setEnabled(false);
             submenuGuardados.setEnabled(false);
         }
@@ -219,7 +234,92 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo)
+    {
+        super.onCreateContextMenu(menu, v, menuInfo);
 
+        menu.setHeaderTitle("Opciones del LED");
+        menu.setHeaderIcon(R.drawable.ic_shell);
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_leds, menu);
+
+        MenuItem menuPegar = menu.findItem(R.id.context_paste);
+
+        if (ledToCopy != null)
+        {
+            menuPegar.setEnabled(true);
+            menuPegar.setTitle(getString(R.string.context_paste) + " (" + ledToCopy.getNumber() + ")");
+        } else {
+            menuPegar.setEnabled(false);
+            menuPegar.setTitle(getString(R.string.context_paste));
+        }
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item)
+    {
+        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+        switch(item.getItemId())
+        {
+            case R.id.context_copy:
+                Log.d("CONTEXT","Selected led: " + ledListAdapter.getItem(info.position).getNumber());
+                ledToCopy = ledListAdapter.getItem(info.position);
+                break;
+            case R.id.context_paste:
+                if (ledToCopy != null) {
+                    LedContainer selected = ledListAdapter.getItem(info.position);
+                    belen.setNewLedColor(ledToCopy.getColor(), selected);
+                    belen.setFireMode(ledToCopy.getFlick(), selected);
+                    ledListAdapter.notifyDataSetChanged();
+                }
+                break;
+            case R.id.context_off: {
+                LedContainer selected = ledListAdapter.getItem(info.position);
+                belen.setFireMode(false, selected);
+                belen.setNewLedColor(Color.rgb(0, 0, 0), selected);
+                ledListAdapter.notifyDataSetChanged();
+            }
+                break;
+            case R.id.context_white: {
+                LedContainer selected = ledListAdapter.getItem(info.position);
+                belen.setFireMode(false, selected);
+                belen.setNewLedColor(Color.rgb(255, 255, 255), selected);
+                ledListAdapter.notifyDataSetChanged();
+            }
+                break;
+            case R.id.context_fire: {
+                LedContainer selected = ledListAdapter.getItem(info.position);
+                belen.setFireMode(true, selected);
+                belen.setNewLedColor(Color.rgb(150, 0, 0), selected);
+                ledListAdapter.notifyDataSetChanged();
+            }
+                break;
+            case R.id.context_red: {
+                LedContainer selected = ledListAdapter.getItem(info.position);
+                belen.setFireMode(false, selected);
+                belen.setNewLedColor(Color.rgb(150, 0, 0), selected);
+                ledListAdapter.notifyDataSetChanged();
+            }
+                break;
+            case R.id.context_blue: {
+                LedContainer selected = ledListAdapter.getItem(info.position);
+                belen.setFireMode(false, selected);
+                belen.setNewLedColor(Color.rgb(0, 0, 150), selected);
+                ledListAdapter.notifyDataSetChanged();
+            }
+                break;
+            case R.id.context_green: {
+                LedContainer selected = ledListAdapter.getItem(info.position);
+                belen.setFireMode(false, selected);
+                belen.setNewLedColor(Color.rgb(0, 150, 0), selected);
+                ledListAdapter.notifyDataSetChanged();
+            }
+                break;
+
+        }
+        return true;
+    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -333,11 +433,33 @@ public class MainActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
+    private void setOptionsMenuState(boolean connected)
+    {
+        if (optionsMenu != null)
+        {
+            MenuItem submenuBelen = optionsMenu.findItem(R.id.submenu_belen);
+            MenuItem submenuGuardados = optionsMenu.findItem(R.id.submenu_guardados);
+            MenuItem connect = optionsMenu.findItem(R.id.action_connect);
+            MenuItem disconnect = optionsMenu.findItem(R.id.action_disconnect);
+            if (connected)
+            {
+                connect.setEnabled(false);
+                disconnect.setEnabled(true);
+                submenuBelen.setEnabled(true);
+                submenuGuardados.setEnabled(true);
+            } else {
+                connect.setEnabled(true);
+                disconnect.setEnabled(false);
+                submenuBelen.setEnabled(false);
+                submenuGuardados.setEnabled(false);
+            }
+        }
+    }
+
     private void updateBluetoothState()
     {
         final int state;
         state = belen.getBluethootState();
-
         TextView txt = (TextView) findViewById(R.id.textView);
 
         ImageView icon = (ImageView) findViewById(R.id.toolbar_icon);
@@ -346,42 +468,20 @@ public class MainActivity extends AppCompatActivity
         switch (state) {
             case BluetoothSerial.STATE_CONNECTING:
                 icon.setImageResource(android.R.drawable.presence_invisible);
-//                submenu.setEnabled(false);
-                if (submenuBelen != null)
-                {
-                    submenuBelen.setEnabled(false);
-                }
-                if (submenuGuardados != null)
-                {
-                    submenuGuardados.setEnabled(false);
-                }
+                setOptionsMenuState(false);
+                txt.setVisibility(View.VISIBLE);
                 txt.setText("Conectando...");
                 break;
             case BluetoothSerial.STATE_CONNECTED:
                 icon.setImageResource(android.R.drawable.presence_online);
-//                submenu.setEnabled(true);
-                if (submenuBelen != null)
-                {
-                    submenuBelen.setEnabled(true);
-                }
-                if (submenuGuardados != null)
-                {
-                    submenuGuardados.setEnabled(true);
-                }
-                txt.setText("Conectado a: " + belen.getDeviceName());
+                setOptionsMenuState(true);
+                txt.setVisibility(View.GONE);
                 break;
             default:
                 icon.setImageResource(android.R.drawable.presence_offline);
-//                submenu.setEnabled(false);
-                if (submenuBelen != null)
-                {
-                    submenuBelen.setEnabled(false);
-                }
-                if (submenuGuardados != null)
-                {
-                    submenuGuardados.setEnabled(false);
-                }
-                txt.setText("Desconectado");
+                setOptionsMenuState(false);
+                txt.setVisibility(View.VISIBLE);
+                txt.setText("Conectate al belen usando el menú");
                 break;
         }
 
@@ -671,3 +771,4 @@ public class MainActivity extends AppCompatActivity
     };
 
 }
+
