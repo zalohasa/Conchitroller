@@ -11,6 +11,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.ShapeDrawable;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
@@ -238,8 +241,9 @@ public class MainActivity extends AppCompatActivity
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo)
     {
         super.onCreateContextMenu(menu, v, menuInfo);
-
-        menu.setHeaderTitle("Opciones del LED");
+        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
+        LedContainer selected = ledListAdapter.getItem(info.position);
+        menu.setHeaderTitle("LED: " + selected.getName() + " (" + selected.getNumber() + ")");
         menu.setHeaderIcon(R.drawable.ic_shell);
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_leds, menu);
@@ -249,7 +253,7 @@ public class MainActivity extends AppCompatActivity
         if (ledToCopy != null)
         {
             menuPegar.setEnabled(true);
-            menuPegar.setTitle(getString(R.string.context_paste) + " (" + ledToCopy.getNumber() + ")");
+            menuPegar.setTitle(getString(R.string.context_paste) + " (" + ledToCopy.getNumber()  + " - " + ledToCopy.getName() + ")");
         } else {
             menuPegar.setEnabled(false);
             menuPegar.setTitle(getString(R.string.context_paste));
@@ -720,7 +724,10 @@ public class MainActivity extends AppCompatActivity
             View space = (View) row.findViewById(R.id.led_color);
             ImageView fireImage = (ImageView) row.findViewById(R.id.fire_image);
             LedContainer led = getItem(position);
-            space.setBackgroundColor(led.getColor());
+            //space.setBackgroundColor(led.getColor());
+            GradientDrawable back = (GradientDrawable) space.getBackground();
+            back.setColor(led.getColor());
+
             if (led.getFlick())
             {
                 fireImage.setVisibility(View.VISIBLE);

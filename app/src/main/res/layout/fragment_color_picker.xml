@@ -25,7 +25,7 @@
             android:inputType="textPersonName"
             android:selectAllOnFocus="true"
             android:textSize="15sp"
-            android:id="@+id/led_name_edit" />
+            android:id="@+id/led_name_edit"/>
     </LinearLayout>
 
     <com.flask.colorpicker.ColorPickerView
